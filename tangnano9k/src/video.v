@@ -26,6 +26,13 @@ module video #(
     output reg [7:0] g,
     output reg [7:0] b
 );
+    // NEU: Eingänge registrieren, um Timing-Probleme bei 74 MHz zu beheben
+    reg [10:0] x_reg;
+    reg [9:0] y_reg;
+    always @(posedge clk) begin
+        x_reg <= x;
+        y_reg <= y;
+    end
 
     // differentiate between X and Y (11 bits vs 10 bits)
     `define XBITS 11
@@ -34,9 +41,9 @@ module video #(
     // make sure the game area is centered. 
     // (768 - 448) / 2 =  160
     // (1024 - 448) / 2 =  288
-    localparam XSTART = (VIDEO_WIDE == 0) ? `XBITS'd160 : `XBITS'd416;
+    localparam XSTART = 11'd416;
 
-    localparam YSTART = (VIDEO_WIDE == 0) ? `YBITS'd0 : `YBITS'd72;
+    localparam YSTART = 10'd72;
 
     // --------------------------- sprites ------------------------------
     localparam SPRITES = 8;
@@ -60,22 +67,22 @@ module video #(
     // 3. mask by y coordinate as sprite is only visible in some lines and write to linebuffer
 
     // the type of sprite and the sprite color are stored in spriteram1
-    wire [5:0] sprite_code = spriteram1[{x[6:4], 1'b0}][7:2];
-    wire sprite_flip_y = spriteram1[{x[6:4], 1'b0}][0];
-    wire sprite_flip_x = spriteram1[{x[6:4], 1'b0}][1];
-    wire [5:0] sprite_palette = spriteram1[{x[6:4], 1'b1}][5:0];
+    wire [5:0] sprite_code = spriteram1[{x_reg[6:4], 1'b0}][7:2];
+    wire sprite_flip_y = spriteram1[{x_reg[6:4], 1'b0}][0];
+    wire sprite_flip_x = spriteram1[{x_reg[6:4], 1'b0}][1];
+    wire [5:0] sprite_palette = spriteram1[{x_reg[6:4], 1'b1}][5:0];
     reg [5:0] sprite_palette_d; // register for palette delay
 
     // the x and y coordinates of the sprite are stored in spriteram2
     // wire [7:0] sprite_x = spriteram2[{x[6:4], 1'b0}];
     // remap x coordinate to y and mirror (due to the rotated screen)
-    wire [8:0] sprite_y = (9'd16 + 9'd256) - { 1'b0, spriteram2[{x[6:4], 1'b1}] };
+    wire [8:0] sprite_y = (9'd16 + 9'd256) - { 1'b0, spriteram2[{x_reg[6:4], 1'b1}] };
     reg [8:0] sprite_y_d;
     reg [8:0] sprite_y_d2;
 
     // calculate which sprite line is being displayed in the current screen line
     wire [3:0] sy = (yd[4:1] - sprite_y[3:0]) ^ {4{sprite_flip_y}};
-    wire [3:0] sx = x[3:0] ^ {4{sprite_flip_x}};
+    wire [3:0] sx = x_reg[3:0] ^ {4{sprite_flip_x}};
 
     // The x and y bits that form the address are somewhat shuffled around.
     // This is due the mapping of the graphic data inside the rom and more
@@ -95,7 +102,7 @@ module video #(
 
     // collect all sprite pixels into the line buffer
     // data and color rom access has one clock delay each, thus x-2
-    wire [`XBITS-1:0] xs = x - `XBITS'd2;
+    wire [`XBITS-1:0] xs = x_reg - `XBITS'd2;
 
     always @(posedge clk) begin
         // sprite palette is delayed by one pixel as the palette is not
@@ -120,10 +127,10 @@ module video #(
     // ------------------------ background tiles ------------------------
     // x pixel position is three clocks ahead to compensate
     // for rom read delay in tilemap, colortable and palette
-    wire [`XBITS-1:0] xd = x + `XBITS'd3 - XSTART;
+    wire [`XBITS-1:0] xd = x_reg + `XBITS'd3 - XSTART;
 
     // NEU: Y-Koordinate um den Offset verschieben
-    wire [`YBITS-1:0] yd = y - YSTART;
+    wire [`YBITS-1:0] yd = y_reg - YSTART;
 
     // tile x/y coordinates used for memory access. The X coordinate
     // is delayed by one, so the tile is fetched one clock ahead of time
@@ -235,14 +242,14 @@ module video #(
     // Sprite 1 and 2 are offset one extra pixel to the left. It may be possible 
     // that sprite 0 needs to be offset as well. But Pacman never uses that.
     localparam SPRITE_BASE_OFFSET = 10'(XSTART>>1) - 10'd1 + 10'd255 - 10'd16;
-    wire [`XBITS-2:0] sx0 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[ 0]});
-    wire [`XBITS-2:0] sx1 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET-10'd1 - {1'b0, spriteram2[ 2]});
-    wire [`XBITS-2:0] sx2 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET-10'd1 - {1'b0, spriteram2[ 4]});
-    wire [`XBITS-2:0] sx3 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[ 6]});
-    wire [`XBITS-2:0] sx4 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[ 8]});
-    wire [`XBITS-2:0] sx5 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[10]});
-    wire [`XBITS-2:0] sx6 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[12]});
-    wire [`XBITS-2:0] sx7 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[14]});
+    wire [`XBITS-2:0] sx0 = x_reg[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[ 0]});
+    wire [`XBITS-2:0] sx1 = x_reg[`XBITS-1:1] - (SPRITE_BASE_OFFSET-10'd1 - {1'b0, spriteram2[ 2]});
+    wire [`XBITS-2:0] sx2 = x_reg[`XBITS-1:1] - (SPRITE_BASE_OFFSET-10'd1 - {1'b0, spriteram2[ 4]});
+    wire [`XBITS-2:0] sx3 = x_reg[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[ 6]});
+    wire [`XBITS-2:0] sx4 = x_reg[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[ 8]});
+    wire [`XBITS-2:0] sx5 = x_reg[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[10]});
+    wire [`XBITS-2:0] sx6 = x_reg[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[12]});
+    wire [`XBITS-2:0] sx7 = x_reg[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[14]});
 
     // latch pixel data of current pixel of each sprite if this pixel is within the
     // horizontal position of the sprite. Otherwise latch 0
@@ -284,16 +291,16 @@ module video #(
 		end else begin
             vbi <= 1'b0;
 
-            if (x == 0 && y == 576)
+            if (x_reg == 0 && y_reg == 576)
                 vbi <= 1'b1;  // trigger vertical blank interrupt
 
             // default background dark blue
             r = 0; g = 0;
-            if(y[0]) b = 64;
+            if(yd[0]) b = 64;
             else     b = 32;
 
 `ifdef DEBUG
-            if(x >= XSTART+448+16 && x < XSTART+448+16+128) begin
+            if( x_reg >= XSTART && x_reg < XSTART+10'd448 && y_reg >= YSTART && y_reg < YSTART+10'd576 ) begin
                 if(sprite_linebuffer[x-(XSTART+448+16)] != 0) begin
                     b = { bgr233[7:6], 6'b000000 };
                     g = { bgr233[5:3],  5'b00000 };
@@ -308,15 +315,15 @@ module video #(
 
             // draw game area
             // center on screen: 224 * 2 = 448 pixels game area
-            if( x >= XSTART && x < XSTART+10'd448 && y >= YSTART && y < YSTART+10'd576 ) begin
-                if(yd[0]) begin
+            if( x_reg >= XSTART && x_reg < XSTART+10'd448 && y_reg >= YSTART && y_reg < YSTART+10'd576 ) begin
+                if(yd[0]) begin  // WICHTIG: Hier auch 'yd' statt 'y' nutzen (für Scanlines)
                     b = { bgr233[7:6], 6'b000000 };
                     g = { bgr233[5:3],  5'b00000 };
-                    r = { bgr233[2:0],  5'b00000 }; 
+                    r = { bgr233[2:0],  5'b00000 };
                 end else begin
                     b = { 1'b0, bgr233[7:6], 5'b00000 };
                     g = { 1'b0, bgr233[5:3],  4'b0000 };
-                    r = { 1'b0, bgr233[2:0],  4'b0000 }; 
+                    r = { 1'b0, bgr233[2:0],  4'b0000 };
                 end
             end
 
