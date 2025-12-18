@@ -36,7 +36,7 @@ module top(
 // actual hdmi clock = 174 MHz
 // actual pixel clock = 34.8 MHz
 // 34800000 / 48000 / 2 - 1 = 361
-`define PLL pll_174m 
+`define PLL Gowin_rPLL
 `define AUDIO_DIVISOR 9'd361
 `define VIDEO_WIDE 0
 `define PIXEL_CLOCK  34800000

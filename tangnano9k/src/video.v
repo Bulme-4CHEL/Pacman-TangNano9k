@@ -36,6 +36,8 @@ module video #(
     // (1024 - 448) / 2 =  288
     localparam XSTART = (VIDEO_WIDE == 0) ? `XBITS'd160 : `XBITS'd416;
 
+    localparam YSTART = (VIDEO_WIDE == 0) ? `YBITS'd0 : `YBITS'd72;
+
     // --------------------------- sprites ------------------------------
     localparam SPRITES = 8;
 
@@ -72,7 +74,7 @@ module video #(
     reg [8:0] sprite_y_d2;
 
     // calculate which sprite line is being displayed in the current screen line
-    wire [3:0] sy = (y[4:1] - sprite_y[3:0]) ^ {4{sprite_flip_y}};
+    wire [3:0] sy = (yd[4:1] - sprite_y[3:0]) ^ {4{sprite_flip_y}};
     wire [3:0] sx = x[3:0] ^ {4{sprite_flip_x}};
 
     // The x and y bits that form the address are somewhat shuffled around.
@@ -108,7 +110,7 @@ module video #(
         // fetch sprite data during the first 128 pixels (bits 0000xxxxxx)
         if(xs[`XBITS-1:7] == 0) begin
             // check if sprite is visible within this line
-            if(y[`YBITS-1:1] >= sprite_y_d2 && y[`YBITS-1:1] <  sprite_y_d2 + 16)
+            if(yd[`YBITS-1:1] >= sprite_y_d2 && y[`YBITS-1:1] <  sprite_y_d2 + 16)
                 sprite_linebuffer[xs[6:0]] <= color;
             else
                 sprite_linebuffer[xs[6:0]] <= 4'h0;
@@ -120,10 +122,13 @@ module video #(
     // for rom read delay in tilemap, colortable and palette
     wire [`XBITS-1:0] xd = x + `XBITS'd3 - XSTART;
 
+    // NEU: Y-Koordinate um den Offset verschieben
+    wire [`YBITS-1:0] yd = y - YSTART;
+
     // tile x/y coordinates used for memory access. The X coordinate
     // is delayed by one, so the tile is fetched one clock ahead of time
     wire [4:0] tx = xd[8:4]+5'd1;  // x: 0..27
-    wire [5:0] ty = y[9:4];        // y: 0..35
+    wire [5:0] ty = yd[9:4];        // y: 0..35
 
     // map from screen coordinates to memory address.
     wire [11:0] ram_addr = ((xd[3:0] == 4'd14)?12'h000:12'h400) + (
@@ -137,14 +142,14 @@ module video #(
 
     // tile address: The lower bits address one of the 16 bytes a tile consists of and
     // the upper bits address the tile
-    wire [11:0] tile_addr = { tile_index , { ~y[3], ~xd[3:1] } };
+    wire [11:0] tile_addr = { tile_index , { ~yd[3], ~xd[3:1] } };
 
     reg [5:0] tile_palette;
 
     wire [5:0] palette = (x<130)?sprite_palette_d:tile_palette;
 
     wire [3:0] tile_pixel_lo, tile_pixel_hi;
-    wire [1:0] tile_pixel = { tile_pixel_hi[~y[2:1]], tile_pixel_lo[~y[2:1]] };
+    wire [1:0] tile_pixel = { tile_pixel_hi[~yd[2:1]], tile_pixel_lo[~y[2:1]] };
 
     // process sprite colors during sprite prefetch, else tile pixels
     wire [1:0] pixel = (x<130)?sprite_pixel:tile_pixel;
@@ -303,8 +308,8 @@ module video #(
 
             // draw game area
             // center on screen: 224 * 2 = 448 pixels game area
-            if( x >= XSTART && x < XSTART+10'd448 ) begin
-                if(y[0]) begin
+            if( x >= XSTART && x < XSTART+10'd448 && y >= YSTART && y < YSTART+10'd576 ) begin
+                if(yd[0]) begin
                     b = { bgr233[7:6], 6'b000000 };
                     g = { bgr233[5:3],  5'b00000 };
                     r = { bgr233[2:0],  5'b00000 }; 
