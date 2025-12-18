@@ -45,6 +45,9 @@ module video #(
 
     localparam YSTART = 10'd72;
 
+    wire [`XBITS-1:0] xd = x_reg + `XBITS'd3 - XSTART;
+    wire [`YBITS-1:0] yd = y_reg - YSTART;
+
     // --------------------------- sprites ------------------------------
     localparam SPRITES = 8;
 
@@ -115,9 +118,9 @@ module video #(
         sprite_y_d2 <= sprite_y_d;
 
         // fetch sprite data during the first 128 pixels (bits 0000xxxxxx)
-        if(xs[`XBITS-1:7] == 0) begin
+        if(xs[`XBITS-1:7] == 'd0) begin
             // check if sprite is visible within this line
-            if(yd[`YBITS-1:1] >= sprite_y_d2 && y[`YBITS-1:1] <  sprite_y_d2 + 16)
+            if(yd[`YBITS-1:1] >= sprite_y_d2 && yd[`YBITS-1:1] <  sprite_y_d2 + 16)
                 sprite_linebuffer[xs[6:0]] <= color;
             else
                 sprite_linebuffer[xs[6:0]] <= 4'h0;
@@ -127,10 +130,7 @@ module video #(
     // ------------------------ background tiles ------------------------
     // x pixel position is three clocks ahead to compensate
     // for rom read delay in tilemap, colortable and palette
-    wire [`XBITS-1:0] xd = x_reg + `XBITS'd3 - XSTART;
-
-    // NEU: Y-Koordinate um den Offset verschieben
-    wire [`YBITS-1:0] yd = y_reg - YSTART;
+    
 
     // tile x/y coordinates used for memory access. The X coordinate
     // is delayed by one, so the tile is fetched one clock ahead of time
@@ -153,13 +153,13 @@ module video #(
 
     reg [5:0] tile_palette;
 
-    wire [5:0] palette = (x<130)?sprite_palette_d:tile_palette;
+    wire [5:0] palette = (x_reg<130)?sprite_palette_d:tile_palette;
 
     wire [3:0] tile_pixel_lo, tile_pixel_hi;
-    wire [1:0] tile_pixel = { tile_pixel_hi[~yd[2:1]], tile_pixel_lo[~y[2:1]] };
+    wire [1:0] tile_pixel = { tile_pixel_hi[~yd[2:1]], tile_pixel_lo[~yd[2:1]] };
 
     // process sprite colors during sprite prefetch, else tile pixels
-    wire [1:0] pixel = (x<130)?sprite_pixel:tile_pixel;
+    wire [1:0] pixel = (x_reg<130)?sprite_pixel:tile_pixel;
     wire [3:0] color;
     wire [7:0] bgr233;
   
@@ -275,7 +275,7 @@ module video #(
         .oce(1'b1),
         .ce(1'b1),
 `ifdef DEBUG
-        .ad( { 1'b0, (x < XSTART+448+16-1)?final_color:sprite_linebuffer[x-(XSTART+448+16-1)] } ),
+        .ad( { 1'b0, (x_reg < XSTART+448+16-1)?final_color:sprite_linebuffer[x_reg-(XSTART+448+16-1)] } ),
 `else
         .ad( { 1'b0, final_color } ),
 `endif
@@ -295,20 +295,20 @@ module video #(
                 vbi <= 1'b1;  // trigger vertical blank interrupt
 
             // default background dark blue
-            r = 0; g = 0;
-            if(yd[0]) b = 64;
-            else     b = 32;
+            r <= 0; g <= 0;
+            if(yd[0]) b <= 64;
+            else     b <= 32;
 
 `ifdef DEBUG
             if( x_reg >= XSTART && x_reg < XSTART+10'd448 && y_reg >= YSTART && y_reg < YSTART+10'd576 ) begin
                 if(sprite_linebuffer[x-(XSTART+448+16)] != 0) begin
-                    b = { bgr233[7:6], 6'b000000 };
-                    g = { bgr233[5:3],  5'b00000 };
-                    r = { bgr233[2:0],  5'b00000 };
+                    b <= { bgr233[7:6], 6'b000000 };
+                    g <= { bgr233[5:3],  5'b00000 };
+                    r <= { bgr233[2:0],  5'b00000 };
                 end else begin
-                    b = x[4]?8'hc0:8'hff;
-                    g = x[4]?8'hc0:8'hff;
-                    r = x[4]?8'hc0:8'hff;
+                    b <= x[4]?8'hc0:8'hff;
+                    g <= x[4]?8'hc0:8'hff;
+                    r <= x[4]?8'hc0:8'hff;
                 end
             end
 `endif
@@ -317,13 +317,13 @@ module video #(
             // center on screen: 224 * 2 = 448 pixels game area
             if( x_reg >= XSTART && x_reg < XSTART+10'd448 && y_reg >= YSTART && y_reg < YSTART+10'd576 ) begin
                 if(yd[0]) begin  // WICHTIG: Hier auch 'yd' statt 'y' nutzen (für Scanlines)
-                    b = { bgr233[7:6], 6'b000000 };
-                    g = { bgr233[5:3],  5'b00000 };
-                    r = { bgr233[2:0],  5'b00000 };
+                    b <= { bgr233[7:6], 6'b000000 };
+                    g <= { bgr233[5:3],  5'b00000 };
+                    r <= { bgr233[2:0],  5'b00000 };
                 end else begin
-                    b = { 1'b0, bgr233[7:6], 5'b00000 };
-                    g = { 1'b0, bgr233[5:3],  4'b0000 };
-                    r = { 1'b0, bgr233[2:0],  4'b0000 };
+                    b <= { 1'b0, bgr233[7:6], 5'b00000 };
+                    g <= { 1'b0, bgr233[5:3],  4'b0000 };
+                    r <= { 1'b0, bgr233[2:0],  4'b0000 };
                 end
             end
 
