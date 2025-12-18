@@ -34,7 +34,7 @@ module video #(
     // make sure the game area is centered. 
     // (768 - 448) / 2 =  160
     // (1024 - 448) / 2 =  288
-    localparam XSTART = (VIDEO_WIDE == 0)?`XBITS'd160:`XBITS'd288;
+    localparam XSTART = (VIDEO_WIDE == 0) ? `XBITS'd160 : `XBITS'd416;
 
     // --------------------------- sprites ------------------------------
     localparam SPRITES = 8;

@@ -133,7 +133,8 @@ audio_sample_packet #(.SAMPLING_FREQUENCY(SAMPLING_FREQUENCY), .WORD_LENGTH({{WO
 
 auxiliary_video_information_info_frame #(
     .VIDEO_ID_CODE(7'(VIDEO_ID_CODE)),
-    .IT_CONTENT(IT_CONTENT)
+    .IT_CONTENT(IT_CONTENT),
+    .RGB_QUANTIZATION_RANGE(2'b10)
 ) auxiliary_video_information_info_frame(.header(headers[130]), .sub(subs[130]));
 
 

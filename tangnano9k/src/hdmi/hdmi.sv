@@ -8,7 +8,7 @@ module hdmi
     // Defaults to 640x480 which should be supported by almost if not all HDMI sinks.
     // See README.md or CEA-861-D for enumeration of video id codes.
     // Pixel repetition, interlaced scans and other special output modes are not implemented (yet).
-    parameter int VIDEO_ID_CODE = 1,
+    parameter int VIDEO_ID_CODE = 4,
 
     // The IT content bit indicates that image samples are generated in an ad-hoc
     // manner (e.g. directly from values in a framebuffer, as by a PC video
@@ -19,7 +19,7 @@ module hdmi
     //
     // This flag also tends to cause receivers to treat RGB values as full
     // range (0-255).
-    parameter bit IT_CONTENT = 1'b1,
+    parameter bit IT_CONTENT = 1'b0,
 
     // Defaults to minimum bit lengths required to represent positions.
     // Modify these parameters if you have alternate desired bit lengths.

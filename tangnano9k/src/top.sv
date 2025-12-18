@@ -1,7 +1,7 @@
 /* top.sv - pacman on tang nano 9k toplevel */
 
 // enable for 16:9 (1024*576) instead of 4:3 (768*576) video
-`define WIDE
+//define WIDE
 
 module top(
   input clk,
@@ -28,9 +28,9 @@ module top(
 // actual pixel clock = 47.828 MHz
 // 47828000 / 48000 / 2 - 1 = 497
 `define PLL pll_240m 
-`define AUDIO_DIVISOR 9'd497
+`define AUDIO_DIVISOR 9'd772
 `define VIDEO_WIDE 1
-`define PIXEL_CLOCK 47828000
+`define PIXEL_CLOCK 74250000
 `else
 // 768x576p@60hz:  174.8 MHz HDMI clock, actual pixel clock = 34.8 MHz
 // actual hdmi clock = 174 MHz
@@ -90,7 +90,7 @@ logic [9:0]  cy;                 // vertical pixel counter
 reg [9:0] audio_out_register;    // register holding the single pacman audio channel
 wire [15:0] audio_out = { {2{audio_out_register[9]}}, audio_out_register, 4'b0000 };
 
-hdmi #(.VIDEO_ID_CODE(65), .VIDEO_WIDE(`VIDEO_WIDE), .VIDEO_REFRESH_RATE(60),
+hdmi #(.VIDEO_ID_CODE(4), .VIDEO_WIDE(`VIDEO_WIDE), .VIDEO_REFRESH_RATE(60),
     .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16),
     .VENDOR_NAME( { "MiST", 32'd0} ),
     .PRODUCT_DESCRIPTION( {"Pacman Arcade", 24'd0} )
