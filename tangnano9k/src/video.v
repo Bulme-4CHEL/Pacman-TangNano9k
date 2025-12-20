@@ -45,7 +45,7 @@ module video #(
 
     localparam YSTART = 10'd72;
 
-    wire [`XBITS-1:0] xd = x_reg + `XBITS'd3 - XSTART;
+    wire [`XBITS-1:0] xd = x_reg + `XBITS'd4 - XSTART;
     wire [`YBITS-1:0] yd = y_reg - YSTART;
 
     // --------------------------- sprites ------------------------------
