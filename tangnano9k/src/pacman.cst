@@ -26,4 +26,3 @@ IO_LOC "resetn" 4;
 IO_PORT "resetn" PULL_MODE=UP;
 IO_LOC "clk" 52;
 IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-PS C:\_school\PacMan-4CHEL\tangnano9k>
