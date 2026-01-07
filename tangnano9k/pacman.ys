@@ -1,0 +1,19 @@
+# 1. Generierte T80 CPU (aus GHDL)
+read_verilog src/T80/t80_combined.v
+
+# 2. Generiertes SystemVerilog (aus sv2v)
+# Ersetzt alle einzelnen .sv read_verilog Aufrufe
+read_verilog src/sv_combined.v
+
+# 3. Restliche Verilog Dateien
+read_verilog src/video.v
+
+# 4. Gowin IP Cores & ROMs
+read_verilog src/roms/*.v
+read_verilog src/gowin_clkdiv/gowin_clkdiv.v
+read_verilog src/gowin_dpb/ram.v
+read_verilog src/gowin_rpll/pll_174m.v
+read_verilog src/gowin_rpll/pll_240m.v
+
+# 5. Synthese
+synth_gowin -top top -json pacman.json
