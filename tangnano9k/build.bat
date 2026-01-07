@@ -27,7 +27,7 @@ yosys -s pacman.ys
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 echo [3/4] Place and Route...
-nextpnr-gowin --json pacman.json --write pacman_pnr.json --family %FAMILY% --device %DEVICE% --cst %CST%
+nextpnr-himbaechel --json pacman.json --write pacman_pnr.json --device %DEVICE% --vopt family=%FAMILY% --vopt cst=%CST%
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 echo [4/4] Packing Bitstream...

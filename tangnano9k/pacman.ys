@@ -2,14 +2,24 @@
 read_verilog src/T80/t80_combined.v
 
 # 2. Generiertes SystemVerilog (aus sv2v)
-# Ersetzt alle einzelnen .sv read_verilog Aufrufe
 read_verilog src/sv_combined.v
 
-# 3. Restliche Verilog Dateien
-read_verilog src/video.v
+# 3. Restliche Verilog/SystemVerilog Dateien
+read_verilog -sv src/video.v
 
 # 4. Gowin IP Cores & ROMs
-read_verilog src/roms/*.v
+# Wildcards (*.v) funktionieren unter Windows in Yosys oft nicht -> explizit listen:
+read_verilog src/roms/82s123_7f.v
+read_verilog src/roms/82s126_1m.v
+read_verilog src/roms/82s126_3m.v
+read_verilog src/roms/82s126_4a.v
+read_verilog src/roms/pacman_5e.v
+read_verilog src/roms/pacman_5f.v
+read_verilog src/roms/pacman_6e.v
+read_verilog src/roms/pacman_6f.v
+read_verilog src/roms/pacman_6h.v
+read_verilog src/roms/pacman_6j.v
+
 read_verilog src/gowin_clkdiv/gowin_clkdiv.v
 read_verilog src/gowin_dpb/ram.v
 read_verilog src/gowin_rpll/pll_174m.v
