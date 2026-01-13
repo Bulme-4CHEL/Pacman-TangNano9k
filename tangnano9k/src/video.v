@@ -89,7 +89,7 @@ module video #(
 
     // buffer to store all sprite pixels for one line
     // 8 sprites with 16 pixels each are 128 pixels
-    (* syn_ramstyle = "block_ram" *) reg [3:0] sprite_linebuffer [127:0];
+    (* ram_style = "distributed" *) reg [3:0] sprite_linebuffer [127:0];
 
     // collect all sprite pixels into the line buffer
     // data and color rom access has one clock delay each, thus x-2

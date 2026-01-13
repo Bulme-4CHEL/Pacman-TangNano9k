@@ -78,8 +78,8 @@ always_ff @(posedge clk_pixel)
 logic sample_buffer_current = 1'b0;
 logic [1:0] samples_remaining = 2'd0;
 
-// FIX: Force implementation as Block RAM to save LUTs and prevent routing congestion
-(* syn_ramstyle = "block_ram" *) logic [23:0] audio_sample_word_buffer [1:0] [3:0] [1:0];
+// FORCE Distributed RAM for Open Source Toolchain
+(* ram_style = "distributed" *) logic [23:0] audio_sample_word_buffer [1:0] [3:0] [1:0];
 
 logic [AUDIO_BIT_WIDTH-1:0] audio_sample_word_transfer_mux [1:0];
 always_comb
