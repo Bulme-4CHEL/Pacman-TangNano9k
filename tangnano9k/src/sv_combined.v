@@ -719,33 +719,52 @@ module packet_picker (
     end
     reg [1:0] audio_sample_word_transfer_control_synchronizer_chain = 2'd0;
     always @(posedge clk_pixel) audio_sample_word_transfer_control_synchronizer_chain <= {audio_sample_word_transfer_control, audio_sample_word_transfer_control_synchronizer_chain[1]};
+    
     reg sample_buffer_current = 1'b0;
     reg [1:0] samples_remaining = 2'd0;
-    
-    // FIX: Removed (* syn_ramstyle = "block_ram" *) to save ~48 BRAM blocks
-    reg [191:0] audio_sample_word_buffer [1:0];
-    
+
+    // FIX: Manuelle Auflösung des Arrays in zwei separate Register -> Erzwingt Flip-Flops (DFF)
+    reg [191:0] audio_sample_word_buffer_0;
+    reg [191:0] audio_sample_word_buffer_1;
+    reg [191:0] current_buffer_read_val; // Helper variable für den Mux
+
     reg [(2 * AUDIO_BIT_WIDTH) - 1:0] audio_sample_word_transfer_mux;
+    
     always @(*) begin
         if (_sv2v_0)
             ;
+        
+        // Multiplexer für Lesezugriff auf das "Array"
+        current_buffer_read_val = (sample_buffer_current == 1'b1) ? audio_sample_word_buffer_1 : audio_sample_word_buffer_0;
+
         if (audio_sample_word_transfer_control_synchronizer_chain[0] ^ audio_sample_word_transfer_control_synchronizer_chain[1])
             audio_sample_word_transfer_mux = audio_sample_word_transfer;
         else
-            audio_sample_word_transfer_mux = {audio_sample_word_buffer[sample_buffer_current][(((samples_remaining * 2) + 1) * 24) + (23 >= (24 - AUDIO_BIT_WIDTH) ? 23 : (23 + (23 >= (24 - AUDIO_BIT_WIDTH) ? 0 + AUDIO_BIT_WIDTH : (24 - AUDIO_BIT_WIDTH) - 22)) - 1)-:(23 >= (24 - AUDIO_BIT_WIDTH) ? 0 + AUDIO_BIT_WIDTH : (24 - AUDIO_BIT_WIDTH) - 22)], audio_sample_word_buffer[sample_buffer_current][((samples_remaining * 2) * 24) + (23 >= (24 - AUDIO_BIT_WIDTH) ? 23 : (23 + (23 >= (24 - AUDIO_BIT_WIDTH) ? 0 + AUDIO_BIT_WIDTH : (24 - AUDIO_BIT_WIDTH) - 22)) - 1)-:(23 >= (24 - AUDIO_BIT_WIDTH) ? 0 + AUDIO_BIT_WIDTH : (24 - AUDIO_BIT_WIDTH) - 22)]};
+            // Zugriff auf aufgelöste Variable current_buffer_read_val statt Array
+            audio_sample_word_transfer_mux = {current_buffer_read_val[(((samples_remaining * 2) + 1) * 24) + (23 >= (24 - AUDIO_BIT_WIDTH) ? 23 : (23 + (23 >= (24 - AUDIO_BIT_WIDTH) ? 0 + AUDIO_BIT_WIDTH : (24 - AUDIO_BIT_WIDTH) - 22)) - 1)-:(23 >= (24 - AUDIO_BIT_WIDTH) ? 0 + AUDIO_BIT_WIDTH : (24 - AUDIO_BIT_WIDTH) - 22)], current_buffer_read_val[((samples_remaining * 2) * 24) + (23 >= (24 - AUDIO_BIT_WIDTH) ? 23 : (23 + (23 >= (24 - AUDIO_BIT_WIDTH) ? 0 + AUDIO_BIT_WIDTH : (24 - AUDIO_BIT_WIDTH) - 22)) - 1)-:(23 >= (24 - AUDIO_BIT_WIDTH) ? 0 + AUDIO_BIT_WIDTH : (24 - AUDIO_BIT_WIDTH) - 22)]};
     end
+
     reg sample_buffer_used = 1'b0;
     reg sample_buffer_ready = 1'b0;
     function automatic [23:0] sv2v_cast_24;
         input reg [23:0] inp;
         sv2v_cast_24 = inp;
     endfunction
+
     always @(posedge clk_pixel) begin
         if (sample_buffer_used)
             sample_buffer_ready <= 1'b0;
         if (audio_sample_word_transfer_control_synchronizer_chain[0] ^ audio_sample_word_transfer_control_synchronizer_chain[1]) begin
-            audio_sample_word_buffer[sample_buffer_current][(samples_remaining * 2) * 24+:24] <= sv2v_cast_24(audio_sample_word_transfer_mux[0+:AUDIO_BIT_WIDTH]) << (24 - AUDIO_BIT_WIDTH);
-            audio_sample_word_buffer[sample_buffer_current][((samples_remaining * 2) + 1) * 24+:24] <= sv2v_cast_24(audio_sample_word_transfer_mux[AUDIO_BIT_WIDTH+:AUDIO_BIT_WIDTH]) << (24 - AUDIO_BIT_WIDTH);
+            
+            // Schreibzugriff manuell gemultiplext auf Buffer 0 oder 1
+            if (sample_buffer_current == 1'b0) begin
+                audio_sample_word_buffer_0[(samples_remaining * 2) * 24+:24] <= sv2v_cast_24(audio_sample_word_transfer_mux[0+:AUDIO_BIT_WIDTH]) << (24 - AUDIO_BIT_WIDTH);
+                audio_sample_word_buffer_0[((samples_remaining * 2) + 1) * 24+:24] <= sv2v_cast_24(audio_sample_word_transfer_mux[AUDIO_BIT_WIDTH+:AUDIO_BIT_WIDTH]) << (24 - AUDIO_BIT_WIDTH);
+            end else begin
+                audio_sample_word_buffer_1[(samples_remaining * 2) * 24+:24] <= sv2v_cast_24(audio_sample_word_transfer_mux[0+:AUDIO_BIT_WIDTH]) << (24 - AUDIO_BIT_WIDTH);
+                audio_sample_word_buffer_1[((samples_remaining * 2) + 1) * 24+:24] <= sv2v_cast_24(audio_sample_word_transfer_mux[AUDIO_BIT_WIDTH+:AUDIO_BIT_WIDTH]) << (24 - AUDIO_BIT_WIDTH);
+            end
+
             if (samples_remaining == 2'd3) begin
                 samples_remaining <= 2'd0;
                 sample_buffer_ready <= 1'b1;
@@ -822,7 +841,8 @@ module packet_picker (
             end
             else if (sample_buffer_ready) begin
                 packet_type <= 8'd2;
-                audio_sample_word_packet <= audio_sample_word_buffer[!sample_buffer_current];
+                // Zugriff auf manuell getrennte Buffer
+                audio_sample_word_packet <= (sample_buffer_current == 1'b0) ? audio_sample_word_buffer_1 : audio_sample_word_buffer_0;
                 audio_sample_word_present_packet <= 4'b1111;
                 sample_buffer_used <= 1'b1;
             end
