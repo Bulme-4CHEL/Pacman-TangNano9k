@@ -1,0 +1,18 @@
+v 4
+file . "src/T80/T80sed.vhd" "0a48ad62f843e5414e1d5a99f25765e66c9efa00" "20260107123726.162":
+  entity t80sed at 70( 2657) + 0 on 20;
+  architecture rtl of t80sed at 98( 3506) + 0 on 21;
+file . "src/T80/T80.vhd" "74cf4f2642b205c1fff6d0260fc8cfbd96461dd6" "20260107123726.161":
+  entity t80 at 80( 3091) + 0 on 18;
+  architecture rtl of t80 at 125( 4540) + 0 on 19;
+file . "src/T80/T80_Reg.vhd" "b3545e1103f0907f54e276d641e93c93fa589cad" "20260107123726.159":
+  entity t80_reg at 61( 2312) + 0 on 16;
+  architecture rtl of t80_reg at 85( 3221) + 0 on 17;
+file . "src/T80/T80_ALU.vhd" "809f55e02d673f9ba6fa14c8596f43d0a02f2d9e" "20260107123726.159":
+  entity t80_alu at 68( 2569) + 0 on 14;
+  architecture rtl of t80_alu at 98( 3449) + 0 on 15;
+file . "src/T80/T80_MCode.vhd" "d3a59961d89148d65d79e699a8d30a105f757a00" "20260107123726.157":
+  entity t80_mcode at 75( 2812) + 0 on 12;
+  architecture rtl of t80_mcode at 149( 6050) + 0 on 13;
+file . "src/T80/T80_Pack.vhd" "68f6022f3df179d03c36328cb74ba6aff31d74af" "20260107123726.153":
+  package t80_pack at 57( 2226) + 0 on 11;

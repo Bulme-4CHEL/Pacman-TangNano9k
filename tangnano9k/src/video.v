@@ -7,7 +7,7 @@
 // `define DEBUG
 
 module video #(
-    parameter int VIDEO_WIDE = 0
+    parameter VIDEO_WIDE = 0
 ) (
 	input clk, resetn,
 
@@ -229,7 +229,7 @@ module video #(
     // one cycle to run the data through the palette.
     // Sprite 1 and 2 are offset one extra pixel to the left. It may be possible 
     // that sprite 0 needs to be offset as well. But Pacman never uses that.
-    localparam SPRITE_BASE_OFFSET = 10'(XSTART>>1) - 10'd1 + 10'd255 - 10'd16;
+    localparam SPRITE_BASE_OFFSET = (XSTART>>1) - 10'd1 + 10'd255 - 10'd16;
     wire [`XBITS-2:0] sx0 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET       - {1'b0, spriteram2[ 0]});
     wire [`XBITS-2:0] sx1 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET-10'd1 - {1'b0, spriteram2[ 2]});
     wire [`XBITS-2:0] sx2 = x[`XBITS-1:1] - (SPRITE_BASE_OFFSET-10'd1 - {1'b0, spriteram2[ 4]});
