@@ -75,13 +75,13 @@ logic [1:0] audio_sample_word_transfer_control_synchronizer_chain = 2'd0;
 always_ff @(posedge clk_pixel)
     audio_sample_word_transfer_control_synchronizer_chain <= {audio_sample_word_transfer_control, audio_sample_word_transfer_control_synchronizer_chain[1]};
 
-logic sample_buffer_current = 1'b0;
-logic [1:0] samples_remaining = 2'd0;
+reg sample_buffer_current = 1'b0;
+reg [1:0] samples_remaining = 2'd0;
 
-// FORCE Distributed RAM for Open Source Toolchain
-(* ram_style = "distributed" *) logic [23:0] audio_sample_word_buffer [1:0] [3:0] [1:0];
+// FIX: Zwinge Synthese in Register (Flip-Flops), da SSRAM voll ist
+(* ram_style = "registers" *) reg [191:0] audio_sample_word_buffer [1:0];
 
-logic [AUDIO_BIT_WIDTH-1:0] audio_sample_word_transfer_mux [1:0];
+reg [(2 * AUDIO_BIT_WIDTH) - 1:0] audio_sample_word_transfer_mux;
 always_comb
 begin
     if (audio_sample_word_transfer_control_synchronizer_chain[0] ^ audio_sample_word_transfer_control_synchronizer_chain[1])
