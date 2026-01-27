@@ -3353,7 +3353,7 @@ module pacman_5e (dout, clk, oce, ce, reset, ad);
 
     // Fix: Synchrone Leselogik für Block-RAM & korrekte Bit-Zuordnung
     always @(posedge clk) begin
-        dout[7:4] <= mem_0[ad];
-        dout[3:0] <= mem_1[ad];
+        dout[7:4] <= mem_1[ad];
+        dout[3:0] <= mem_0[ad];
     end
 endmodule

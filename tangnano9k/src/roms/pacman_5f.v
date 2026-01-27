@@ -3415,7 +3415,7 @@ module pacman_5f (dout, clk, oce, ce, reset, ad);
         mem_1[4029] = 4'h2;
     end
     always @(posedge clk) begin
-        dout[7:4] <= mem_0[ad];
-        dout[3:0] <= mem_1[ad];
+        dout[7:4] <= mem_1[ad];
+        dout[3:0] <= mem_0[ad];
     end
 endmodule
