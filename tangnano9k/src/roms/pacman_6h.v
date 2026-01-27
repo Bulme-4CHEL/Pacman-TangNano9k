@@ -6946,7 +6946,7 @@ module pacman_6h (dout, clk, oce, ce, reset, ad);
     // WICHTIG: Asynchrone 'assign' entfernen und durch diesen
     // synchronen Block ersetzen:
     always @(posedge clk) begin
-        dout[7:4] <= mem_0[ad];
-        dout[3:0] <= mem_1[ad];
+        dout[7:4] <= mem_1[ad];
+        dout[3:0] <= mem_0[ad];
     end
 endmodule
