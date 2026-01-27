@@ -9,7 +9,7 @@
         "src/top.sv",
         "src/video.v",
         "src/gowin_clkdiv/gowin_clkdiv.v",
-        "src/gowin_dpb/ram.v",
+        "src/ram_custom.sv",
         "src/gowin_rpll/pll_174m.v",
         "src/gowin_rpll/pll_240m.v",
         "src/hdmi/audio_clock_regeneration_packet.sv",
